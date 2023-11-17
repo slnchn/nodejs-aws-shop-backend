@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
 import * as productsRepository from "./products-data/products-repository";
+import { buildResponse } from "./utils";
 
 export const getProduct = async (
   event: APIGatewayProxyEvent
@@ -10,22 +11,13 @@ export const getProduct = async (
       event.pathParameters.id
     );
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(product),
-    };
+    if (product) {
+      return buildResponse(200, { product });
+    }
+
+    return buildResponse(404, { message: "Product not found" });
   }
 
-  return {
-    statusCode: 400,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      error: "Bad request",
-    }),
-  };
+  // I believe it won't get here as we have /products route but just in case ;)
+  return buildResponse(400, { message: "Please provide id" });
 };

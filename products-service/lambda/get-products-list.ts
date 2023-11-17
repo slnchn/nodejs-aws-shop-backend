@@ -1,14 +1,7 @@
 import * as productsRepository from "./products-data/products-repository";
+import { buildResponse } from "./utils";
 
 export const getProductsList = async () => {
   const products = await productsRepository.listProducts();
-
-  return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "application/json",
-      // You can add more headers as needed
-    },
-    body: JSON.stringify(products),
-  };
+  return buildResponse(200, { products });
 };
