@@ -12,7 +12,7 @@ export const getProduct = async (
     );
 
     if (product) {
-      return buildResponse(200, { product });
+      return buildResponse(200, product);
     }
 
     return buildResponse(404, { message: "Product not found" });

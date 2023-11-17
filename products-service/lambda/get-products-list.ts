@@ -3,5 +3,5 @@ import { buildResponse } from "./utils";
 
 export const getProductsList = async () => {
   const products = await productsRepository.listProducts();
-  return buildResponse(200, { products });
+  return buildResponse(200, products);
 };
