@@ -7,7 +7,11 @@ test("getProduct returns product", async () => {
   expect(response.body).toBeDefined();
 
   const body = JSON.parse(response.body);
-  expect(body.product).toBeDefined();
+  expect(body).toBeDefined();
+  expect(body.id).toBeDefined();
+  expect(body.title).toBeDefined();
+  expect(body.description).toBeDefined();
+  expect(body.price).toBeDefined();
 });
 
 test("getProduct returns 404 if product not found", async () => {
@@ -21,11 +25,11 @@ test("getProduct returns 404 if product not found", async () => {
 
 test("getProduct returns correct data", async () => {
   const response = await getProduct({ pathParameters: { id: "1" } } as any);
-  const body = JSON.parse(response.body);
+  const product = JSON.parse(response.body);
   const productFromRepo = await productsRepository.getProduct("1");
 
-  expect(body.product.id).toBe(productFromRepo?.id);
-  expect(body.product.title).toBe(productFromRepo?.title);
-  expect(body.product.description).toBe(productFromRepo?.description);
-  expect(body.product.price).toBe(productFromRepo?.price);
+  expect(product.id).toBe(productFromRepo?.id);
+  expect(product.title).toBe(productFromRepo?.title);
+  expect(product.description).toBe(productFromRepo?.description);
+  expect(product.price).toBe(productFromRepo?.price);
 });

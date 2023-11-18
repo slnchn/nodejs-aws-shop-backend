@@ -1,22 +1,27 @@
 import { getProductsList } from "../../lambda/get-products-list";
+import { Product } from "../../lambda/products-data/products-data";
 import * as productsRepository from "../../lambda/products-data/products-repository";
 
-test("getProductsList response should have correct shape", async () => {
+test("getProductsList response should be an array of Product", async () => {
   const response = await getProductsList();
   expect(response.statusCode).toBe(200);
   expect(response.body).toBeDefined();
 
-  const body = JSON.parse(response.body);
-  expect(body.products).toBeDefined();
-  expect(Object.keys(body).length).toBe(1);
+  const products = JSON.parse(response.body);
+  products.forEach((product: Product) => {
+    expect(product.id).toBeDefined();
+    expect(product.title).toBeDefined();
+    expect(product.description).toBeDefined();
+    expect(product.price).toBeDefined();
+  });
 });
 
 test("getProductsList should return correct data", async () => {
   const productsFromRepo = await productsRepository.listProducts();
   const response = await getProductsList();
-  const body = JSON.parse(response.body);
+  const products = JSON.parse(response.body);
 
-  body.products.forEach((product: any) => {
+  products.forEach((product: any) => {
     const productFromRepo = productsFromRepo.find(
       (p: any) => p.id === product.id
     );
@@ -27,5 +32,5 @@ test("getProductsList should return correct data", async () => {
     expect(productFromRepo?.price).toBe(product.price);
   });
 
-  expect(body.products.length).toBe(productsFromRepo.length);
+  expect(products.length).toBe(productsFromRepo.length);
 });
