@@ -1,0 +1,80 @@
+[
+  {
+    "id": "58856222-6130-4889-9e47-45eaea5d5d8d",
+    "title": "One Piece",
+    "description": "Adventure manga by Eiichiro Oda",
+    "price": 12
+  },
+  {
+    "id": "5710ab0f-915e-4954-8eb4-21f2d551b22d",
+    "title": "Naruto",
+    "description": "Ninja-themed manga by Masashi Kishimoto",
+    "price": 10
+  },
+  {
+    "id": "ecad9f7d-ead2-4df1-ad29-1ae49701c4de",
+    "title": "Attack on Titan",
+    "description": "Dark fantasy manga by Hajime Isayama",
+    "price": 14
+  },
+  {
+    "id": "e7379955-8074-4d0b-b981-61c00e301020",
+    "title": "Death Note",
+    "description": "Psychological thriller by Tsugumi Ohba",
+    "price": 9
+  },
+  {
+    "id": "28a43a05-1c8b-47d2-b72d-8eeb99fec588",
+    "title": "My Hero Academia",
+    "description": "Superhero manga by Kohei Horikoshi",
+    "price": 15
+  },
+  {
+    "id": "2007d5b9-2fce-4bcb-a2fb-78fb359784bf",
+    "title": "Fullmetal Alchemist",
+    "description": "Adventure manga by Hiromu Arakawa",
+    "price": 18
+  },
+  {
+    "id": "6c74be54-60f8-4b92-ac19-e64aebd8ce9d",
+    "title": "One Punch Man",
+    "description": "Action-comedy manga by ONE",
+    "price": 11
+  },
+  {
+    "id": "388df400-6bdf-492f-8ac0-74633801584c",
+    "title": "Demon Slayer: Kimetsu no Yaiba",
+    "description": "Supernatural action manga by Koyoharu Gotouge",
+    "price": 16
+  },
+  {
+    "id": "aaab7884-b77e-40b7-9653-1f94a1f7ca03",
+    "title": "Tokyo Ghoul",
+    "description": "Dark fantasy manga by Sui Ishida",
+    "price": 13
+  },
+  {
+    "id": "d2ff3543-36d6-4c95-8bfa-7409cc5fb557",
+    "title": "Hunter x Hunter",
+    "description": "Adventure manga by Yoshihiro Togashi",
+    "price": 17
+  },
+  {
+    "id": "6c8879ab-8601-4950-8f02-aedfa883fbd7",
+    "title": "Berzerk",
+    "description": "Dark fantasy manga by Kentaro Miura",
+    "price": 19
+  },
+  {
+    "id": "1f1077c2-7e14-4117-accf-707e59474acd",
+    "title": "Vagabond",
+    "description": "Adventure manga by Takehiko Inoue",
+    "price": 20
+  },
+  {
+    "id": "cbae9c5d-0c26-4a92-883b-81f24409e0c9",
+    "title": "JoJo's Bizarre Adventure",
+    "description": "Adventure manga by Hirohiko Araki",
+    "price": 21
+  }
+]
