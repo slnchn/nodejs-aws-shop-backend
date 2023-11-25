@@ -1,25 +1,68 @@
-import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb";
+import {
+  BatchGetItemCommand,
+  DynamoDBClient,
+  ScanCommand,
+} from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 
-import { Product, products } from "./products-data";
+import { ProductStock, Stock, products } from "./products-data";
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 
-export const listProducts = async () => {
-  console.log("listProducts", process.env.PRODUCTS_TABLE_NAME);
+const getProductsStocks = async (productIds: string[]) => {
+  const keys = productIds.map((productId) => ({
+    product_id: { S: productId },
+  }));
 
-  const scanParams = {
+  const batchGetCommand = new BatchGetItemCommand({
+    RequestItems: {
+      [process.env.STOCKS_TABLE_NAME as string]: {
+        Keys: keys,
+      },
+    },
+  });
+
+  const batchGetResult = await client.send(batchGetCommand);
+  if (
+    !(
+      batchGetResult &&
+      batchGetResult.Responses &&
+      batchGetResult.Responses[process.env.STOCKS_TABLE_NAME as string]
+    )
+  ) {
+    return null;
+  }
+
+  return batchGetResult.Responses[process.env.STOCKS_TABLE_NAME as string].map(
+    (item) => unmarshall(item)
+  ) as Stock[];
+};
+
+export const listProducts = async () => {
+  const productsScanParams = {
     TableName: process.env.PRODUCTS_TABLE_NAME,
   };
 
-  const scanCommand = new ScanCommand(scanParams);
-  const scanResult = await client.send(scanCommand);
-
-  if (scanResult && scanResult.Items) {
-    return scanResult.Items.map((item) => unmarshall(item) as Product);
+  const productsScanCommand = new ScanCommand(productsScanParams);
+  const productsScanResult = await client.send(productsScanCommand);
+  if (!(productsScanResult && productsScanResult.Items)) {
+    return null;
   }
 
-  return null;
+  const products = productsScanResult.Items.map((item) => unmarshall(item));
+  const productIds = products.map((item) => item.id);
+  const stocks = await getProductsStocks(productIds);
+  if (!stocks) {
+    return null;
+  }
+
+  return products.map((product) => {
+    const stock = stocks.find((stock) => stock.product_id === product.id);
+    return {
+      ...product,
+      count: stock?.count,
+    };
+  }) as ProductStock[];
 };
 
 export const getProduct = async (id: string) => {

@@ -18,6 +18,12 @@ export class ProductsServiceStack extends cdk.Stack {
       process.env.PRODUCTS_TABLE_NAME as string
     );
 
+    const stocksTable = dynamodb.Table.fromTableName(
+      this,
+      "StocksTable",
+      process.env.STOCKS_TABLE_NAME as string
+    );
+
     const productsApi = new apiGateway.RestApi(this, "products-api", {
       restApiName: "Products Service",
       defaultCorsPreflightOptions: {
@@ -48,6 +54,7 @@ export class ProductsServiceStack extends cdk.Stack {
     );
 
     productsTable.grantReadData(getProductsListHandler);
+    stocksTable.grantReadData(getProductsListHandler);
 
     const getProductsListIntegration = new apiGateway.LambdaIntegration(
       getProductsListHandler

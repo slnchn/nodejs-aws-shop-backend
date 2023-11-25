@@ -5,6 +5,15 @@ export interface Product {
   price: number;
 }
 
+export interface Stock {
+  product_id: string;
+  count: number;
+}
+
+export interface ProductStock extends Product {
+  count: number;
+}
+
 export const products: Product[] = [
   {
     id: "1",

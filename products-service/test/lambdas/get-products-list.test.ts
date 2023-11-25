@@ -12,7 +12,6 @@ test("getProductsList response should be an array of Product", async () => {
   expect(response.body).toBeDefined();
 
   const products = JSON.parse(response.body);
-  console.log(products);
   products.forEach((product: Product) => {
     expect(product.id).toBeDefined();
     expect(product.title).toBeDefined();

@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "build:test": "npm run build && npm run test",
     "build:synth:deploy": "npm run build && cdk synth && cdk deploy"
   },
   "devDependencies": {

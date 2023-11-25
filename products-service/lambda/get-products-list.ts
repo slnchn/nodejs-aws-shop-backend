@@ -5,8 +5,6 @@ export const getProductsList = async () => {
   try {
     const products = await productsRepository.listProducts();
 
-    console.log("getProductsList", process.env.PRODUCTS_TABLE_NAME);
-
     if (!products) {
       return buildResponse(404, { message: "Products not found" });
     }
