@@ -3,6 +3,7 @@ import {
   DynamoDBClient,
   GetItemCommand,
   ScanCommand,
+  BatchWriteItemCommand,
 } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 
@@ -100,4 +101,38 @@ export const getProduct = async (id: string) => {
   }
 
   return null;
+};
+
+export const createProductStock = async (product: ProductStock) => {
+  const params = {
+    RequestItems: {
+      [process.env.PRODUCTS_TABLE_NAME as string]: [
+        {
+          PutRequest: {
+            Item: {
+              id: { S: product.id },
+              title: { S: product.title },
+              description: product.description
+                ? { S: product.description }
+                : { NULL: true },
+              price: { N: product.price.toString() },
+            },
+          },
+        },
+      ],
+
+      [process.env.STOCKS_TABLE_NAME as string]: [
+        {
+          PutRequest: {
+            Item: {
+              product_id: { S: product.id },
+              count: { N: product.count.toString() },
+            },
+          },
+        },
+      ],
+    },
+  };
+
+  await client.send(new BatchWriteItemCommand(params));
 };

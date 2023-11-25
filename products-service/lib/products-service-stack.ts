@@ -82,5 +82,29 @@ export class ProductsServiceStack extends cdk.Stack {
 
     productsTable.grantReadData(getProductHandler);
     stocksTable.grantReadData(getProductHandler);
+
+    // create
+    const createProductHandler = new lambda.Function(
+      this,
+      "CreateProductHandler",
+      {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        code: lambda.Code.fromAsset("lambda"),
+        handler: "create-product.createProduct",
+
+        environment: {
+          PRODUCTS_TABLE_NAME: process.env.PRODUCTS_TABLE_NAME as string,
+          STOCKS_TABLE_NAME: process.env.STOCKS_TABLE_NAME as string,
+        },
+      }
+    );
+
+    const createProductIntegration = new apiGateway.LambdaIntegration(
+      createProductHandler
+    );
+    productsResource.addMethod("POST", createProductIntegration);
+
+    productsTable.grantWriteData(createProductHandler);
+    stocksTable.grantWriteData(createProductHandler);
   }
 }
