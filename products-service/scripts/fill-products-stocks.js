@@ -20,6 +20,7 @@ const putData = async (table, items) => {
     };
 
     try {
+      // TODO: use batch write instead
       dynamoDb.put(params, (error) => {
         if (error) {
           console.log(error);
