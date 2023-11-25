@@ -1,6 +1,7 @@
 import {
   BatchGetItemCommand,
   DynamoDBClient,
+  GetItemCommand,
   ScanCommand,
 } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
@@ -38,6 +39,10 @@ const getProductsStocks = async (productIds: string[]) => {
   ) as Stock[];
 };
 
+// TODO: refactor
+// 1. handling edge cases
+// 2. merging products and stocks
+
 export const listProducts = async () => {
   const productsScanParams = {
     TableName: process.env.PRODUCTS_TABLE_NAME,
@@ -66,5 +71,33 @@ export const listProducts = async () => {
 };
 
 export const getProduct = async (id: string) => {
-  return products.find((product) => product.id === id);
+  const getProductParams = {
+    TableName: process.env.PRODUCTS_TABLE_NAME, // replace with your table name
+    Key: {
+      id: { S: id }, // replace 'productId' with your id attribute name
+    },
+  };
+
+  const getProductStockParams = {
+    TableName: process.env.STOCKS_TABLE_NAME,
+    Key: {
+      product_id: { S: id },
+    },
+  };
+
+  const [productResponse, stockResponse] = await Promise.all([
+    client.send(new GetItemCommand(getProductParams)),
+    client.send(new GetItemCommand(getProductStockParams)),
+  ]);
+
+  if (productResponse.Item && stockResponse.Item) {
+    const product = unmarshall(productResponse.Item);
+    const stock = unmarshall(stockResponse.Item);
+    return {
+      ...product,
+      count: stock.count,
+    } as ProductStock;
+  }
+
+  return null;
 };

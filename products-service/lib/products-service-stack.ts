@@ -45,7 +45,6 @@ export class ProductsServiceStack extends cdk.Stack {
         // I'd prefer get-products-list.handler but by the task description function name should be getProductsList
         handler: "get-products-list.getProductsList",
 
-        // TODO: find out if I need it at all, or it's enough to use the dotenv
         environment: {
           PRODUCTS_TABLE_NAME: process.env.PRODUCTS_TABLE_NAME as string,
           STOCKS_TABLE_NAME: process.env.STOCKS_TABLE_NAME as string,
@@ -67,6 +66,11 @@ export class ProductsServiceStack extends cdk.Stack {
       code: lambda.Code.fromAsset("lambda"),
       // I'd prefer get-product.handler but by the task description function name should be getProduct
       handler: "get-product.getProduct",
+
+      environment: {
+        PRODUCTS_TABLE_NAME: process.env.PRODUCTS_TABLE_NAME as string,
+        STOCKS_TABLE_NAME: process.env.STOCKS_TABLE_NAME as string,
+      },
     });
 
     const productByIdResource = productsResource.addResource("{id}");
@@ -75,5 +79,8 @@ export class ProductsServiceStack extends cdk.Stack {
       getProductHandler
     );
     productByIdResource.addMethod("GET", getProductIntegration);
+
+    productsTable.grantReadData(getProductHandler);
+    stocksTable.grantReadData(getProductHandler);
   }
 }

@@ -22,6 +22,7 @@ export const getProduct = async (
     // I believe it won't get here as we have /products route but just in case ;)
     return buildResponse(400, { message: "Please provide id" });
   } catch (error) {
+    console.error(error);
     return buildResponse(500, { message: "Internal server error" });
   }
 };
