@@ -94,7 +94,7 @@ export const listProducts = async (): Promise<ListProductsResult> => {
       logError("productsRepository::listProducts", error.message);
     }
 
-    return { success: false, error: "Data retreiving error" };
+    return { success: false, error: "Products list retreiving error" };
   }
 };
 
@@ -147,7 +147,7 @@ export const getProduct = async (id: string): Promise<GetProductResult> => {
       logError("productsRepository::getProduct", error.message);
     }
 
-    return { success: false, error: "Data retreiving error" };
+    return { success: false, error: "Product retreiving error" };
   }
 };
 
@@ -170,12 +170,15 @@ export const createProductStock = async (
         {
           Put: {
             TableName: process.env.PRODUCTS_TABLE_NAME as string,
-            Item: marshall({
-              id: product.id,
-              title: product.title,
-              description: product.description,
-              price: product.price,
-            }),
+            Item: marshall(
+              {
+                id: product.id,
+                title: product.title,
+                description: product.description,
+                price: product.price,
+              },
+              { removeUndefinedValues: true }
+            ),
           },
         },
         {
@@ -198,6 +201,6 @@ export const createProductStock = async (
       logError("productsRepository::createProductStock", error.message);
     }
 
-    return { success: false, error: "Data retreiving error" };
+    return { success: false, error: "Product creation error" };
   }
 };
