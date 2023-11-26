@@ -3,7 +3,7 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 
 import { validateCreateProduct } from "./validators/validate-create-product";
 import { createProductStock } from "./products-data/products-repository";
-import { buildResponse, isValidJSON } from "./utils";
+import { buildResponse, getValidBody } from "./utils";
 import { logError, logInfo } from "./logger";
 
 export const createProduct = async (event: APIGatewayProxyEvent) => {
@@ -12,12 +12,7 @@ export const createProduct = async (event: APIGatewayProxyEvent) => {
 
     const { body } = event;
 
-    if (!body || (body && !isValidJSON(body))) {
-      logError("createProduct", "Invalid body format");
-      return buildResponse(400, { message: "Invalid body format" });
-    }
-
-    const product = JSON.parse(body || "{}");
+    const product = getValidBody(body || "{}") as any;
     if (!product) {
       logError("createProduct", "Invalid body format");
       return buildResponse(400, { message: "Invalid body format" });

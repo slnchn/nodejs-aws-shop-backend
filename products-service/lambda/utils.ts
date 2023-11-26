@@ -11,11 +11,19 @@ export const buildResponse = (statusCode: number, body: object) => {
   };
 };
 
-export const isValidJSON = (value: string): boolean => {
+export const getValidBody = (body: string): object | null => {
   try {
-    JSON.parse(value);
-    return true;
+    const result = JSON.parse(body); // throws an error if has wrong format
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      !Array.isArray(result)
+    ) {
+      return result;
+    }
+
+    return null;
   } catch (error) {
-    return false;
+    return null;
   }
 };
