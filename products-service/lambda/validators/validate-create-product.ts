@@ -23,6 +23,8 @@ const PRODUCT_PRICE_MAX_DECIMAL_PLACES = 2;
 const PRODUCT_COUNT_MIN = 0;
 const PRODUCT_COUNT_MAX = 999999;
 
+const validFields = ["title", "description", "price", "count"];
+
 const validateTitle = (title: string): string[] => {
   const errors: string[] = [];
 
@@ -58,6 +60,7 @@ const validatePrice = (price: number): string[] => {
 
   if (typeof price !== "number") {
     errors.push("Price must be a number");
+    return errors;
   }
 
   if (price <= PRODUCT_PRICE_MIN) {
@@ -82,6 +85,7 @@ const validateCount = (count: number): string[] => {
 
   if (typeof count !== "number") {
     errors.push("Count must be a number");
+    return errors;
   }
 
   if (count <= PRODUCT_COUNT_MIN) {
@@ -128,6 +132,14 @@ export const validateCreateProduct = (
   } else {
     const countErrors = validateCount(product.count);
     errors.push(...countErrors);
+  }
+
+  const unknownFields = Object.keys(product).filter(
+    (key) => !validFields.includes(key)
+  );
+
+  if (unknownFields.length > 0) {
+    errors.push(`Unknown fields: ${unknownFields.join(", ")}`);
   }
 
   if (errors.length > 0) {

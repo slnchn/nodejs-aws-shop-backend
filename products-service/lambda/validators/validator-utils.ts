@@ -20,6 +20,7 @@ export const validateString = ({
 
   if (typeof value !== "string") {
     errors.push(`${valueName} must be a string`);
+    return errors;
   }
 
   if (value.length < minLength) {
