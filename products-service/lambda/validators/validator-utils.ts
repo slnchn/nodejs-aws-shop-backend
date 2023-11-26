@@ -32,7 +32,7 @@ export const validateString = ({
 
   if (hasUnsafeCharacters(value)) {
     errors.push(
-      `${valueName} must not contain unsafe ('<', '>', '&', '/', '\', '?') characters`
+      `${valueName} must not contain unsafe ('<', '>', '&', '/', '\\', '?') characters`
     );
   }
 
