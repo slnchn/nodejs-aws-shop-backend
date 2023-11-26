@@ -84,7 +84,7 @@ const validateCount = (count: number): string[] => {
     errors.push("Count must be a number");
   }
 
-  if (count < PRODUCT_COUNT_MIN) {
+  if (count <= PRODUCT_COUNT_MIN) {
     errors.push(`Count must be greater than ${PRODUCT_COUNT_MIN}`);
   }
 
