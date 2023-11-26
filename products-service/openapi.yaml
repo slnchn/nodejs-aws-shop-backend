@@ -22,6 +22,82 @@ paths:
                 - id: "2"
                   title: "Product 2"
                   price: 29.99
+        '404':
+          description: Products not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Interval server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string    
+    post:
+      summary: Create a new product
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                count:
+                  type: integer
+      responses:
+        '200':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  price:
+                    type: number
+                  count:
+                    type: integer
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
   /products/{id}:
     get:
       summary: Get a single product by ID
@@ -42,15 +118,21 @@ paths:
                 title: "Product 1"
                 description: "Description of Product 1"
                 price: 19.99
-        '404':
-          description: Product not found
-          content:
-            application/json:
-              example:
-                message: "Product not found"
         '400':
           description: Bad Request
           content:
             application/json:
               example:
                 message: "Please provide id"
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              example:
+                message: "Product not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              example:
+                message: "Internal server error"

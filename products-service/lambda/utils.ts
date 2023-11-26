@@ -10,3 +10,20 @@ export const buildResponse = (statusCode: number, body: object) => {
     body: JSON.stringify(body),
   };
 };
+
+export const getValidBody = (body: string): object | null => {
+  try {
+    const result = JSON.parse(body); // throws an error if has wrong format
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      !Array.isArray(result)
+    ) {
+      return result;
+    }
+
+    return null;
+  } catch (error) {
+    return null;
+  }
+};
