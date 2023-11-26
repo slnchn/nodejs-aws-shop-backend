@@ -104,11 +104,11 @@ export const validateCreateProduct = (
 ): ValidationResult => {
   const errors: string[] = [];
 
-  if (product.title) {
+  if (product.title === undefined) {
+    errors.push("Title is required");
+  } else {
     const titleErrors = validateTitle(product.title);
     errors.push(...titleErrors);
-  } else {
-    errors.push("Title is required");
   }
 
   if (product.description) {
@@ -116,18 +116,18 @@ export const validateCreateProduct = (
     errors.push(...descriptionErrors);
   }
 
-  if (product.price) {
+  if (product.price === undefined) {
+    errors.push("Price is required");
+  } else {
     const priceErrors = validatePrice(product.price);
     errors.push(...priceErrors);
-  } else {
-    errors.push("Price is required");
   }
 
-  if (product.count) {
+  if (product.count === undefined) {
+    errors.push("Count is required");
+  } else {
     const countErrors = validateCount(product.count);
     errors.push(...countErrors);
-  } else {
-    errors.push("Count is required");
   }
 
   if (errors.length > 0) {
