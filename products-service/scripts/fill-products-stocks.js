@@ -1,36 +1,30 @@
-const dotenv = require("dotenv");
+const { config } = require("dotenv");
 
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocument } = require("@aws-sdk/lib-dynamodb");
+
+const { createBatchWriteParamsList } = require("./utils");
 
 // data
 const products = require("./products-data.json");
 const stocks = require("./stocks-data.json");
 
-dotenv.config();
+config();
 
 const client = new DynamoDBClient({ region: process.env.AWS_REGION });
 const dynamoDb = DynamoDBDocument.from(client);
 
-const putData = async (table, items) => {
-  items.forEach(async (item) => {
-    const params = {
-      TableName: table,
-      Item: item,
-    };
+(async () => {
+  try {
+    const list = createBatchWriteParamsList(products, stocks);
 
-    try {
-      // TODO: use batch write instead
-      dynamoDb.put(params, (error) => {
-        if (error) {
-          console.log(error);
-        }
-      });
-    } catch (error) {
-      console.log(error);
-    }
-  });
-};
-
-putData(process.env.PRODUCTS_TABLE_NAME, products);
-putData(process.env.STOCKS_TABLE_NAME, stocks);
+    // taking max 3 batches because I want to be sure that I'm not going to create billions of items
+    // it won't be, but I'm just a bit paranoid :p
+    const paramsList = list.slice(0, 3);
+    paramsList.forEach(async (params) => {
+      await dynamoDb.batchWrite(params);
+    });
+  } catch (error) {
+    console.error(error);
+  }
+})();
