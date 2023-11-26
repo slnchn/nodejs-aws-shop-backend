@@ -10,3 +10,12 @@ export const buildResponse = (statusCode: number, body: object) => {
     body: JSON.stringify(body),
   };
 };
+
+export const isValidJSON = (value: string): boolean => {
+  try {
+    JSON.parse(value);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
