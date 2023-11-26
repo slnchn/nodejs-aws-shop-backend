@@ -3,9 +3,9 @@ import {
   DynamoDBClient,
   GetItemCommand,
   ScanCommand,
-  BatchWriteItemCommand,
+  TransactWriteItemsCommand,
 } from "@aws-sdk/client-dynamodb";
-import { unmarshall } from "@aws-sdk/util-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 import { Product, ProductStock, Stock, products } from "./products-data";
 import { logError } from "../logger";
@@ -166,36 +166,31 @@ export const createProductStock = async (
 ): Promise<CreateProductStockResult> => {
   try {
     const params = {
-      RequestItems: {
-        [process.env.PRODUCTS_TABLE_NAME as string]: [
-          {
-            PutRequest: {
-              Item: {
-                id: { S: product.id },
-                title: { S: product.title },
-                description: product.description
-                  ? { S: product.description }
-                  : { NULL: true },
-                price: { N: product.price.toString() },
-              },
-            },
+      TransactItems: [
+        {
+          Put: {
+            TableName: process.env.PRODUCTS_TABLE_NAME as string,
+            Item: marshall({
+              id: product.id,
+              title: product.title,
+              description: product.description,
+              price: product.price,
+            }),
           },
-        ],
-
-        [process.env.STOCKS_TABLE_NAME as string]: [
-          {
-            PutRequest: {
-              Item: {
-                product_id: { S: product.id },
-                count: { N: product.count.toString() },
-              },
-            },
+        },
+        {
+          Put: {
+            TableName: process.env.STOCKS_TABLE_NAME as string,
+            Item: marshall({
+              product_id: product.id,
+              count: product.count,
+            }),
           },
-        ],
-      },
+        },
+      ],
     };
 
-    await client.send(new BatchWriteItemCommand(params));
+    await client.send(new TransactWriteItemsCommand(params));
 
     return { success: true, data: product };
   } catch (error) {
