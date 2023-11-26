@@ -18,6 +18,11 @@ export const createProduct = async (event: APIGatewayProxyEvent) => {
     }
 
     const product = JSON.parse(body || "{}");
+    if (!product) {
+      logError("createProduct", "Invalid body format");
+      return buildResponse(400, { message: "Invalid body format" });
+    }
+
     logInfo("createProduct", `Creating product with data: ${body}`);
     const validationResult = validateCreateProduct(product);
     if (!validationResult.success) {
