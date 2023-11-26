@@ -1,17 +1,24 @@
+import { logError } from "./logger";
 import * as productsRepository from "./products-data/products-repository";
 import { buildResponse } from "./utils";
 
 export const getProductsList = async () => {
   try {
-    const products = await productsRepository.listProducts();
+    const result = await productsRepository.listProducts();
+    if (!result.success) {
+      return buildResponse(500, { message: result.error });
+    }
 
-    if (!products) {
+    if (!result.data) {
       return buildResponse(404, { message: "Products not found" });
     }
 
-    return buildResponse(200, products);
+    return buildResponse(200, result.data);
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) {
+      logError("getProductsList", error.message);
+    }
+
     return buildResponse(500, { message: "Internal server error" });
   }
 };

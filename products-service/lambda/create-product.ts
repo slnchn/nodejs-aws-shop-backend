@@ -4,15 +4,12 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { validateCreateProduct } from "./validators/validate-create-product";
 import { createProductStock } from "./products-data/products-repository";
 import { buildResponse } from "./utils";
+import { logError } from "./logger";
 
 export const createProduct = async (event: APIGatewayProxyEvent) => {
   try {
     const { body } = event;
-
-    console.log("createProduct", body);
-
     const product = JSON.parse(body || "{}");
-
     const validationResult = validateCreateProduct(product);
     if (!validationResult.success) {
       return buildResponse(400, {
@@ -29,11 +26,23 @@ export const createProduct = async (event: APIGatewayProxyEvent) => {
       count: product.count,
     };
 
-    await createProductStock(productStockData);
+    const result = await createProductStock(productStockData);
+    if (!result.success) {
+      return buildResponse(500, { message: result.error });
+    }
 
-    return buildResponse(200, productStockData);
+    if (!result.data) {
+      return buildResponse(500, {
+        message: "Something weird happened during product creation",
+      });
+    }
+
+    return buildResponse(200, result.data);
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) {
+      logError("createProduct", error.message);
+    }
+
     return buildResponse(500, { message: "Internal server error" });
   }
 };
