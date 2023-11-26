@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { APIGatewayProxyEvent } from "aws-lambda";
 
-import { buildResponse } from "./utils";
+import { validateCreateProduct } from "./validators/validate-create-product";
 import { createProductStock } from "./products-data/products-repository";
+import { buildResponse } from "./utils";
 
 export const createProduct = async (event: APIGatewayProxyEvent) => {
   try {
@@ -12,16 +13,13 @@ export const createProduct = async (event: APIGatewayProxyEvent) => {
 
     const product = JSON.parse(body || "{}");
 
-    if (
-      !product.title ||
-      !product.description ||
-      !product.price ||
-      !product.count
-    ) {
-      return buildResponse(400, { message: "Bad request" });
+    const validationResult = validateCreateProduct(product);
+    if (!validationResult.success) {
+      return buildResponse(400, {
+        message: "Bad Request",
+        errors: validationResult.errors,
+      });
     }
-
-    // TODO: validate data (types and values)
 
     const productStockData = {
       id: randomUUID(),
