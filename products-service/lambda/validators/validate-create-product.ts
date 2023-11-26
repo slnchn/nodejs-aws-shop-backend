@@ -111,7 +111,7 @@ export const validateCreateProduct = (
     errors.push(...titleErrors);
   }
 
-  if (product.description) {
+  if (product.description !== undefined) {
     const descriptionErrors = validateDescription(product.description);
     errors.push(...descriptionErrors);
   }
