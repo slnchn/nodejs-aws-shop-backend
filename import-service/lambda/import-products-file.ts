@@ -1,22 +1,22 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import { buildResponse } from "./utils/server-utils";
+import { buildResponse, buildResponseFromObject } from "./utils/server-utils";
 
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
+  region: process.env.REGION,
 });
 
 export const importProductsFile = async (event: APIGatewayProxyEvent) => {
   try {
     if (!event?.queryStringParameters?.name) {
-      return buildResponse(400, { message: "Please provide name" });
+      return buildResponseFromObject(400, { message: "Please provide name" });
     }
 
     const fileName = event.queryStringParameters.name;
 
-    const command = new GetObjectCommand({
+    const command = new PutObjectCommand({
       Bucket: process.env.BUCKET_NAME,
       Key: `uploaded/${fileName}`,
     });
@@ -25,12 +25,12 @@ export const importProductsFile = async (event: APIGatewayProxyEvent) => {
       expiresIn: 60,
     });
 
-    return buildResponse(200, { signedUrl });
+    return buildResponse(200, signedUrl);
   } catch (error) {
     if (error instanceof Error) {
       console.error(error.message);
     }
 
-    return buildResponse(500, { message: "Internal server error" });
+    return buildResponseFromObject(500, { message: "Internal server error" });
   }
 };
