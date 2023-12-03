@@ -1,6 +1,6 @@
 import { Readable } from "node:stream";
 
-const csvParser = require("csv-parser");
+import csvParser from "csv-parser";
 
 import {
   CopyObjectCommand,
@@ -71,7 +71,7 @@ export const moveFileToParsed = async (event: S3Event) => {
 
     const copyObjectCommand = new CopyObjectCommand({
       Bucket: bucket,
-      CopySource: `${bucket}/${key}`,
+      CopySource: `${bucket}/${encodeURIComponent(key)}`,
       Key: key.replace("uploaded", "parsed"),
     });
 
