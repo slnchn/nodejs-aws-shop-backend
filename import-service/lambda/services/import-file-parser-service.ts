@@ -41,7 +41,10 @@ export const getFileStream = async (
 
     return null;
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
+
     return null;
   }
 };
@@ -52,7 +55,10 @@ export const logFileStream = (stream: Readable) =>
       .pipe(csvParser())
       .on("data", (data: any) => console.info(`IMPORT FILE PARSER::`, data))
       .on("end", () => resolve({ success: true }))
-      .on("error", (error: Error) => reject({ success: false, error }));
+      .on("error", (error: Error) => {
+        console.error(error.message);
+        reject({ success: false, error: error.message });
+      });
   });
 
 export const moveFileToParsed = async (event: S3Event) => {
@@ -80,7 +86,11 @@ export const moveFileToParsed = async (event: S3Event) => {
 
     return { success: true };
   } catch (error) {
-    console.error(error);
-    return { success: false, error };
+    if (error instanceof Error) {
+      console.error(error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: "Moving file error" };
   }
 };
