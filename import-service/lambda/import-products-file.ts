@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { buildResponse, buildResponseFromObject } from "./utils/server-utils";
+import { validateImportProductsFile } from "./validators/validate-import-products-file";
 
 const s3Client = new S3Client({
   region: process.env.REGION,
@@ -10,12 +11,14 @@ const s3Client = new S3Client({
 
 export const importProductsFile = async (event: APIGatewayProxyEvent) => {
   try {
-    if (!event?.queryStringParameters?.name) {
-      return buildResponseFromObject(400, { message: "Please provide name" });
+    // I belive it will be triggered only on new .csv file upload
+    // but additional validation is always good ;)
+    const validationResult = validateImportProductsFile(event);
+    if (!validationResult.success) {
+      return buildResponse(400, validationResult.message);
     }
 
-    const fileName = event.queryStringParameters.name;
-
+    const fileName = event.queryStringParameters!.name;
     const command = new PutObjectCommand({
       Bucket: process.env.BUCKET_NAME,
       Key: `uploaded/${fileName}`,
