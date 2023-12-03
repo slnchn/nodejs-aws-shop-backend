@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 import { config } from "dotenv";
 
 import * as cdk from "aws-cdk-lib";
@@ -5,6 +7,7 @@ import { Construct } from "constructs";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as apiGateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as nodeLambda from "aws-cdk-lib/aws-lambda-nodejs";
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 
@@ -61,13 +64,13 @@ export class ImportServiceStack extends cdk.Stack {
     bucket.grantWrite(importProductsFileHandler);
 
     // import file parser
-    const importFileParserLambda = new lambda.Function(
+    const importFileParserLambda = new nodeLambda.NodejsFunction(
       this,
       "ImportFileParserLambda",
       {
         runtime: lambda.Runtime.NODEJS_18_X,
-        code: lambda.Code.fromAsset("lambda"),
-        handler: "import-file-parser.importFileParser",
+        entry: path.join(__dirname, "../lambda/import-file-parser.ts"),
+        handler: "index.importFileParser",
 
         environment: {
           REGION: process.env.AWS_REGION as string,

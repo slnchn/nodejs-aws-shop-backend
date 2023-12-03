@@ -1,10 +1,11 @@
 import { Readable } from "node:stream";
 
-import * as csvParser from "csv-parser";
-
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { S3Event } from "aws-lambda";
+
 import { buildResponseFromObject } from "./utils/server-utils";
+
+const csvParser = require("csv-parser");
 
 const s3Client = new S3Client({
   region: process.env.REGION,
@@ -12,6 +13,8 @@ const s3Client = new S3Client({
 
 export const importFileParser = async (event: S3Event) => {
   try {
+    console.info(`IMPORT FILE PARSER::`);
+
     const bucket = event.Records[0].s3.bucket.name;
     const key = decodeURIComponent(
       event.Records[0].s3.object.key.replace(/\+/g, " ")
