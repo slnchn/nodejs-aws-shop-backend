@@ -1,36 +1,25 @@
-import { Readable } from "node:stream";
-
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { S3Event } from "aws-lambda";
 
+import {
+  getFileStream,
+  logFileStream,
+  moveFileToParsed,
+} from "./services/import-file-parser-service";
 import { buildResponseFromObject } from "./utils/server-utils";
-
-const csvParser = require("csv-parser");
-
-const s3Client = new S3Client({
-  region: process.env.REGION,
-});
 
 export const importFileParser = async (event: S3Event) => {
   try {
-    console.info(`IMPORT FILE PARSER::`);
-
-    const bucket = event.Records[0].s3.bucket.name;
-    const key = decodeURIComponent(
-      event.Records[0].s3.object.key.replace(/\+/g, " ")
-    );
-
-    const getObjectCommand = new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    });
-
-    const item = await s3Client.send(getObjectCommand);
-    if (item.Body instanceof Readable) {
-      item.Body.pipe(csvParser()).on("data", (data: any) =>
-        console.info(`IMPORT FILE PARSER::`, data)
-      );
+    const stream = await getFileStream(event);
+    if (!stream) {
+      return buildResponseFromObject(500, {
+        message: "Error of getting file stream",
+      });
     }
+
+    await logFileStream(stream);
+
+    // if file was parsed + logged successfully, we can move it to the parsed/
+    await moveFileToParsed(event);
 
     return buildResponseFromObject(200, { message: "OK, please check logs" });
   } catch (error) {
