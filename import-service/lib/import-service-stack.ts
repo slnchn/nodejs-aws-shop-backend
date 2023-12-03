@@ -8,8 +8,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as apiGateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodeLambda from "aws-cdk-lib/aws-lambda-nodejs";
-import * as events from "aws-cdk-lib/aws-events";
-import * as targets from "aws-cdk-lib/aws-events-targets";
+import { S3EventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 config();
 
@@ -79,25 +78,12 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
-    const s3EventRule = new events.Rule(this, "S3EventRule", {
-      eventPattern: {
-        source: ["aws.s3"],
-        detail: {
-          eventName: ["ObjectCreated:*"],
-        },
-        resources: [bucket.bucketArn],
-      },
-    });
-
-    s3EventRule.addEventPattern({
-      detail: {
-        requestParameters: {
-          key: ["uploaded/*"],
-        },
-      },
-    });
-
-    s3EventRule.addTarget(new targets.LambdaFunction(importFileParserLambda));
+    importFileParserLambda.addEventSource(
+      new S3EventSource(bucket as s3.Bucket, {
+        events: [s3.EventType.OBJECT_CREATED],
+        filters: [{ prefix: "uploaded/", suffix: ".csv" }],
+      })
+    );
 
     bucket.grantRead(importFileParserLambda);
   }
