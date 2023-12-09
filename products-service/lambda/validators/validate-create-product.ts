@@ -103,8 +103,13 @@ const validateCount = (count: number): string[] => {
   return errors;
 };
 
+type ValidateCreateProductOptions = {
+  extraFields?: string[];
+};
+
 export const validateCreateProduct = (
-  product: CreateProductParams
+  product: CreateProductParams,
+  options?: ValidateCreateProductOptions
 ): ValidationResult => {
   const errors: string[] = [];
 
@@ -134,8 +139,9 @@ export const validateCreateProduct = (
     errors.push(...countErrors);
   }
 
+  const fields = [...validFields, ...(options?.extraFields || [])];
   const unknownFields = Object.keys(product).filter(
-    (key) => !validFields.includes(key)
+    (key) => !fields.includes(key)
   );
 
   if (unknownFields.length > 0) {

@@ -1,10 +1,15 @@
+import path = require("node:path");
+
 import { config } from "dotenv";
 
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as apiGateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as nodeLambda from "aws-cdk-lib/aws-lambda-nodejs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 
 config();
 
@@ -106,5 +111,38 @@ export class ProductsServiceStack extends cdk.Stack {
 
     productsTable.grantWriteData(createProductHandler);
     stocksTable.grantWriteData(createProductHandler);
+
+    // catalog batch process
+    const catalogBatchProcessQueue = new sqs.Queue(
+      this,
+      "CatalogBatchProcessQueue",
+      {
+        queueName: "catalogItemsQueue",
+      }
+    );
+
+    const catalogBatchProcessHandler = new nodeLambda.NodejsFunction(
+      this,
+      "CatalogBatchProcessHandler",
+      {
+        runtime: lambda.Runtime.NODEJS_18_X,
+        entry: path.join(__dirname, "../lambda/catalog-batch-process.ts"),
+        handler: "index.catalogBatchProcess",
+
+        environment: {
+          PRODUCTS_TABLE_NAME: process.env.PRODUCTS_TABLE_NAME as string,
+          STOCKS_TABLE_NAME: process.env.STOCKS_TABLE_NAME as string,
+        },
+      }
+    );
+
+    catalogBatchProcessHandler.addEventSource(
+      new SqsEventSource(catalogBatchProcessQueue, {
+        batchSize: 5,
+      })
+    );
+
+    productsTable.grantWriteData(catalogBatchProcessHandler);
+    stocksTable.grantWriteData(catalogBatchProcessHandler);
   }
 }

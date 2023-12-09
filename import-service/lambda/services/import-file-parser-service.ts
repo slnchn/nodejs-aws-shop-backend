@@ -9,6 +9,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { S3Event } from "aws-lambda";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { logInfo } from "../utils/logger";
 
 const getBucketAndKey = (event: S3Event) => {
   const bucket = event.Records[0].s3.bucket.name;
@@ -49,17 +51,62 @@ export const getFileStream = async (
   }
 };
 
-export const logFileStream = (stream: Readable) =>
+const processCsvStream = (
+  stream: Readable,
+  onDataCallback: (data: any) => any
+) =>
   new Promise((resolve, reject) => {
     stream
       .pipe(csvParser())
-      .on("data", (data: any) => console.info(`IMPORT FILE PARSER::`, data))
+      .on("data", onDataCallback)
       .on("end", () => resolve({ success: true }))
       .on("error", (error: Error) => {
         console.error(error.message);
         reject({ success: false, error: error.message });
       });
   });
+
+export const logFileStream = (stream: Readable) =>
+  processCsvStream(stream, (data: any) =>
+    console.info(`IMPORT FILE PARSER::`, data)
+  );
+
+export const sendToSQS = async (stream: Readable) => {
+  const sqsClient = new SQSClient({
+    region: process.env.REGION,
+  });
+
+  const sqsUrl = process.env.SQS_URL as string;
+
+  const onDataCallback = async (data: any) => {
+    const { id, title, description, price, count } = data;
+    const body = {
+      id,
+      title,
+      description,
+      price: Number(price),
+      count: Number(count),
+    };
+
+    const sqsMessage = {
+      MessageBody: JSON.stringify(body),
+      QueueUrl: sqsUrl,
+    };
+
+    const sendMessageCommand = new SendMessageCommand(sqsMessage);
+
+    try {
+      await sqsClient.send(sendMessageCommand);
+      logInfo("sendToSQS", `Message sent: ${JSON.stringify(body)}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(error.message);
+      }
+    }
+  };
+
+  return processCsvStream(stream, onDataCallback);
+};
 
 export const moveFileToParsed = async (event: S3Event) => {
   try {
