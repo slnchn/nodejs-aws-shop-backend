@@ -1,4 +1,4 @@
-import { SQSEvent, SQSRecord } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
 import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
 
 import { logError, logInfo } from "./logger";
