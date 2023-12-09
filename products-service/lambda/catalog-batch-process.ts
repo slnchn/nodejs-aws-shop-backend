@@ -88,19 +88,32 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
         "create product stock",
         `${{ id, title, description, price, count }}`
       );
+
+      // just a notification, no need to wait for it
+      sns
+        .send(
+          new PublishCommand({
+            TopicArn: process.env.SNS_ARN as string,
+            Message: `New product was added: ${title}`,
+            MessageAttributes: {
+              count: {
+                DataType: "Number",
+                StringValue: `${count}`,
+              },
+            },
+          })
+        )
+        .catch((error) => {
+          logError(
+            "catalogBatchProcess",
+            `Error while sending notification: ${error.message}`
+          );
+        });
+
       return createProductStock({ id, title, description, price, count });
     });
 
     await Promise.all(promises);
-
-    await sns.send(
-      new PublishCommand({
-        TopicArn: process.env.SNS_ARN as string,
-        Message: `New products were added: ${validRecords
-          .map((record) => record.title)
-          .join(", ")}`,
-      })
-    );
 
     return buildResponse(200, { message: "OK" });
   } catch (error) {

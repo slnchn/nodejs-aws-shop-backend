@@ -131,8 +131,26 @@ export class ProductsServiceStack extends cdk.Stack {
       }
     );
 
+    const COUNT_FILTER_BORDER = 5;
+
     catalogBatchProcessSnsTopic.addSubscription(
-      new EmailSubscription(process.env.MY_EMAIL as string)
+      new EmailSubscription(process.env.MY_EMAIL as string, {
+        filterPolicy: {
+          count: sns.SubscriptionFilter.numericFilter({
+            lessThan: COUNT_FILTER_BORDER,
+          }),
+        },
+      })
+    );
+
+    catalogBatchProcessSnsTopic.addSubscription(
+      new EmailSubscription(process.env.MY_ANOTHER_EMAIL as string, {
+        filterPolicy: {
+          count: sns.SubscriptionFilter.numericFilter({
+            greaterThanOrEqualTo: COUNT_FILTER_BORDER,
+          }),
+        },
+      })
     );
 
     const catalogBatchProcessHandler = new nodeLambda.NodejsFunction(
