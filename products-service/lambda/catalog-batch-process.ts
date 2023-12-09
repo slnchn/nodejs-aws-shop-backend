@@ -1,4 +1,5 @@
 import { SQSEvent, SQSRecord } from "aws-lambda";
+import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
 
 import { logError, logInfo } from "./logger";
 import { buildResponse, getValidBody } from "./utils";
@@ -78,6 +79,8 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
 
     logInfo("catalogBatchProcess", "All records are valid");
 
+    const sns = new SNSClient();
+
     const promises = validRecords.map((record) => {
       const { id, title, description, price, count } = record;
       logInfo("record", `${JSON.stringify(record)}`);
@@ -89,6 +92,15 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
     });
 
     await Promise.all(promises);
+
+    await sns.send(
+      new PublishCommand({
+        TopicArn: process.env.SNS_ARN as string,
+        Message: `New products were added: ${validRecords
+          .map((record) => record.title)
+          .join(", ")}`,
+      })
+    );
 
     return buildResponse(200, { message: "OK" });
   } catch (error) {

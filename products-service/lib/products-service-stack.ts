@@ -9,7 +9,9 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodeLambda from "aws-cdk-lib/aws-lambda-nodejs";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as sns from "aws-cdk-lib/aws-sns";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 
 config();
 
@@ -121,6 +123,18 @@ export class ProductsServiceStack extends cdk.Stack {
       }
     );
 
+    const catalogBatchProcessSnsTopic = new sns.Topic(
+      this,
+      "CatalogBatchProcessSnsTopic",
+      {
+        topicName: "createProductTopic",
+      }
+    );
+
+    catalogBatchProcessSnsTopic.addSubscription(
+      new EmailSubscription(process.env.MY_EMAIL as string)
+    );
+
     const catalogBatchProcessHandler = new nodeLambda.NodejsFunction(
       this,
       "CatalogBatchProcessHandler",
@@ -132,6 +146,7 @@ export class ProductsServiceStack extends cdk.Stack {
         environment: {
           PRODUCTS_TABLE_NAME: process.env.PRODUCTS_TABLE_NAME as string,
           STOCKS_TABLE_NAME: process.env.STOCKS_TABLE_NAME as string,
+          SNS_ARN: catalogBatchProcessSnsTopic.topicArn,
         },
       }
     );
@@ -144,5 +159,6 @@ export class ProductsServiceStack extends cdk.Stack {
 
     productsTable.grantWriteData(catalogBatchProcessHandler);
     stocksTable.grantWriteData(catalogBatchProcessHandler);
+    catalogBatchProcessSnsTopic.grantPublish(catalogBatchProcessHandler);
   }
 }
