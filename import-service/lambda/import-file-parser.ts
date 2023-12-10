@@ -1,9 +1,10 @@
 import { S3Event } from "aws-lambda";
 
 import {
+  getEntriesFromStream,
   getFileStream,
   moveFileToParsed,
-  sendToSQS,
+  sendSqsBatch,
 } from "./services/import-file-parser-service";
 import { buildResponseFromObject } from "./utils/server-utils";
 
@@ -16,7 +17,8 @@ export const importFileParser = async (event: S3Event) => {
       });
     }
 
-    await sendToSQS(stream);
+    const entries = await getEntriesFromStream(stream);
+    await sendSqsBatch(entries);
 
     // if file was parsed + logged successfully, we can move it to the parsed/
     await moveFileToParsed(event);

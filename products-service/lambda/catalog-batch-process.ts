@@ -1,11 +1,14 @@
 import { SQSEvent } from "aws-lambda";
-import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
 
 import { logError, logInfo } from "./logger";
 import { buildResponse, getValidBody } from "./utils";
 import { validateCreateProduct } from "./validators/validate-create-product";
 import { ProductStock } from "./products-data/products-data";
 import { createProductStock } from "./products-data/products-repository";
+import {
+  buildProductStock,
+  sendProductStockEmail,
+} from "./services/create-product-service";
 
 type GetRecordsResult = {
   validRecords: ProductStock[];
@@ -79,41 +82,21 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
 
     logInfo("catalogBatchProcess", "All records are valid");
 
-    const sns = new SNSClient();
+    const promises = validRecords.map(async (record) => {
+      const productStock = buildProductStock(record);
 
-    const promises = validRecords.map((record) => {
-      const { id, title, description, price, count } = record;
-      logInfo("record", `${JSON.stringify(record)}`);
-      logInfo(
-        "create product stock",
-        `${{ id, title, description, price, count }}`
-      );
+      logInfo("catalogBatchProcess", `${JSON.stringify(record)}`);
+      logInfo("catalogBatchProcess", `${productStock}`);
+
+      await createProductStock(productStock);
 
       // just a notification, no need to wait for it
-      sns
-        .send(
-          new PublishCommand({
-            TopicArn: process.env.SNS_ARN as string,
-            Message: `New product was added: ${title}`,
-            MessageAttributes: {
-              count: {
-                DataType: "Number",
-                StringValue: `${count}`,
-              },
-            },
-          })
-        )
-        .catch((error) => {
-          logError(
-            "catalogBatchProcess",
-            `Error while sending notification: ${error.message}`
-          );
-        });
-
-      return createProductStock({ id, title, description, price, count });
+      sendProductStockEmail(productStock);
     });
 
     await Promise.all(promises);
+
+    logInfo("catalogBatchProcess", "All records were processed");
 
     return buildResponse(200, { message: "OK" });
   } catch (error) {

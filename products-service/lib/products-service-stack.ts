@@ -172,6 +172,7 @@ export class ProductsServiceStack extends cdk.Stack {
     catalogBatchProcessHandler.addEventSource(
       new SqsEventSource(catalogBatchProcessQueue, {
         batchSize: 5,
+        maxBatchingWindow: cdk.Duration.seconds(15),
       })
     );
 
