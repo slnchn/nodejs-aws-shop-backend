@@ -26,10 +26,7 @@ const getRecords = (records: SQSEvent["Records"]) =>
         };
       }
 
-      const validationResult = validateCreateProduct(
-        validBody as ProductStock,
-        { extraFields: ["id"] }
-      );
+      const validationResult = validateCreateProduct(validBody as ProductStock);
 
       if (!validationResult.success) {
         logError(
