@@ -5,12 +5,14 @@ import * as productsRepository from "../../lambda/products-data/products-reposit
 import { catalogBatchProcess } from "../../lambda/catalog-batch-process";
 import { buildResponse } from "../../lambda/utils";
 import { validateCreateProduct } from "../../lambda/validators/validate-create-product";
+import { sendProductStockEmail } from "../../lambda/services/create-product-service";
 
 jest.mock("@aws-sdk/client-sns");
 jest.mock("@aws-sdk/client-dynamodb");
 jest.mock("@aws-sdk/util-dynamodb");
 jest.mock("../../lambda/products-data/products-repository");
 jest.mock("../../lambda/validators/validate-create-product");
+jest.mock("../../lambda/services/create-product-service");
 
 describe("catalogBatchProcess", () => {
   it("should return 400 if no records provided", async () => {
@@ -64,11 +66,14 @@ describe("catalogBatchProcess", () => {
       success: true,
     });
 
+    (sendProductStockEmail as jest.Mock).mockResolvedValue({});
+
     const spy = jest.spyOn(productsRepository, "createProductStock");
 
     const response = await catalogBatchProcess(mockEvent);
     expect(response).toEqual(buildResponse(200, { message: "OK" }));
     expect(spy).toHaveBeenCalled();
+    expect(sendProductStockEmail).toHaveBeenCalled();
   });
 
   it("should return 500 if an error occurs", async () => {
