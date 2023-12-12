@@ -23,6 +23,14 @@ export class ImportServiceStack extends cdk.Stack {
       process.env.BUCKET_NAME as string
     );
 
+    const authLambda = new apiGateway.TokenAuthorizer(this, "BasicAuthorizer", {
+      handler: lambda.Function.fromFunctionArn(
+        this,
+        "ImportAuthorizer",
+        process.env.AUTH_LAMBDA_ARN as string
+      ),
+    });
+
     const importApi = new apiGateway.RestApi(this, "import-api", {
       restApiName: "Import Service",
       defaultCorsPreflightOptions: {
@@ -32,7 +40,11 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
-    const importProductsFileResource = importApi.root.addResource("import");
+    const importProductsFileResource = importApi.root.addResource("import", {
+      defaultMethodOptions: {
+        authorizer: authLambda,
+      },
+    });
 
     // import products file
     const importProductsFileHandler = new lambda.Function(
