@@ -59,6 +59,7 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
     const records = event.Records;
     if (!records || !records.length) {
       logError("catalogBatchProcess", "No records provided");
+      return;
     }
 
     const { validRecords, invalidRecords } = getRecords(records);
