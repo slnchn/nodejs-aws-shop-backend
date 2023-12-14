@@ -56,8 +56,6 @@ export const catalogBatchProcess = async (event: SQSEvent) => {
   try {
     logInfo("catalogBatchProcess", "Processing catalog batch");
 
-    // if at least one record is invalid, return 400
-
     const records = event.Records;
     if (!records || !records.length) {
       logError("catalogBatchProcess", "No records provided");
