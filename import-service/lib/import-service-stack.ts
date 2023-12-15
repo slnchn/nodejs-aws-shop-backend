@@ -23,7 +23,7 @@ export class ImportServiceStack extends cdk.Stack {
       process.env.BUCKET_NAME as string
     );
 
-    const authLambda = new apiGateway.TokenAuthorizer(this, "BasicAuthorizer", {
+    const authorizer = new apiGateway.TokenAuthorizer(this, "BasicAuthorizer", {
       handler: lambda.Function.fromFunctionArn(
         this,
         "ImportAuthorizer",
@@ -42,7 +42,7 @@ export class ImportServiceStack extends cdk.Stack {
 
     const importProductsFileResource = importApi.root.addResource("import", {
       defaultMethodOptions: {
-        authorizer: authLambda,
+        authorizer,
       },
     });
 
