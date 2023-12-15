@@ -1,24 +1,48 @@
 import { APIGatewayTokenAuthorizerEvent } from "aws-lambda";
 
-import { buildResponseFromObject } from "../../utils/server-utils";
+type PolicyEffect = "Allow" | "Deny";
+
+const generatePolicy = (
+  principalId: string,
+  effect: PolicyEffect,
+  resource: string
+) => ({
+  principalId,
+  policyDocument: {
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Action: "execute-api:Invoke",
+        Effect: effect,
+        Resource: resource,
+      },
+    ],
+  },
+});
+
+const decodeToken = (token: string) => {
+  const buff = Buffer.from(token, "base64");
+  const [username, password] = buff.toString("utf-8").split(":");
+  return { username, password };
+};
 
 export const basicAuthorizer = async (
   event: APIGatewayTokenAuthorizerEvent
 ) => {
-  if (!event.authorizationToken) {
-    return buildResponseFromObject(401, { message: "Token is not provided" });
+  try {
+    if (!event.authorizationToken) {
+      return generatePolicy("user", "Deny", event.methodArn);
+    }
+
+    const { username, password } = decodeToken(event.authorizationToken);
+    const storedUserPassword = process.env[username];
+    if (storedUserPassword && storedUserPassword === password) {
+      return generatePolicy("user", "Allow", event.methodArn);
+    }
+
+    return generatePolicy("user", "Deny", event.methodArn);
+  } catch (error) {
+    console.log(error);
+    return generatePolicy("user", "Deny", event.methodArn);
   }
-
-  const encodedCreds = event.authorizationToken.split(" ")[1];
-  const buff = Buffer.from(encodedCreds, "base64");
-  const [username, password] = buff.toString("utf-8").split(":");
-
-  console.log({ username, password });
-
-  const storedUserPassword = process.env[username];
-  if (!storedUserPassword || storedUserPassword !== password) {
-    return buildResponseFromObject(403, { message: "Unauthorized" });
-  }
-
-  return buildResponseFromObject(200, { message: "Authorized" });
 };
