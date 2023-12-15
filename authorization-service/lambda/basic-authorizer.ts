@@ -21,7 +21,12 @@ const generatePolicy = (
 });
 
 const decodeToken = (token: string) => {
-  const buff = Buffer.from(token, "base64");
+  const [type, value] = token.split(" ");
+  if (type !== "Basic" && !value) {
+    throw new Error("Expected a Basic token");
+  }
+
+  const buff = Buffer.from(value, "base64");
   const [username, password] = buff.toString("utf-8").split(":");
   return { username, password };
 };
