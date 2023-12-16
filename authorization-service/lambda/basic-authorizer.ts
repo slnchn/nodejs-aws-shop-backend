@@ -27,15 +27,38 @@ const generatePolicy = (
   },
 });
 
-const decodeToken = (token: string) => {
-  const [type, value] = token.split(" ");
-  if (type !== "Basic" && !value) {
-    throw new Error("Expected a Basic token");
-  }
+type DecodeTokenResult =
+  | {
+      success: true;
+      username: string;
+      password: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
-  const buff = Buffer.from(value, "base64");
-  const [username, password] = buff.toString("utf-8").split(":");
-  return { username, password };
+const decodeToken = (token: string): DecodeTokenResult => {
+  try {
+    const [type, value] = token.split(" ");
+    if (type !== "Basic") {
+      return { success: false, error: "Not Basic token" };
+    }
+
+    if (!value) {
+      return { success: false, error: "No value provided" };
+    }
+
+    const buff = Buffer.from(value, "base64");
+    const [username, password] = buff.toString("utf-8").split(":");
+    return { success: true, username, password };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: false, error: "Unknown error of token decoding" };
+  }
 };
 
 export const basicAuthorizer = async (
@@ -50,17 +73,39 @@ export const basicAuthorizer = async (
       return callback("Unauthorized");
     }
 
-    const { username, password } = decodeToken(event.authorizationToken);
+    logInfo("basicAuthorizer", event.authorizationToken);
+    logInfo("basicAuthorizer", `Decoding token: ${event.authorizationToken}`);
+    const result = decodeToken(event.authorizationToken);
+    if (!result.success) {
+      logError("basicAuthorizer", result.error);
+      return callback("Unauthorized");
+    }
+
+    const { username, password } = result;
     const storedUserPassword = process.env[username];
     if (storedUserPassword && storedUserPassword === password) {
-      const policy = generatePolicy("user", "Allow", event.methodArn);
       logInfo("basicAuthorizer", "Auth successful");
+      const policy = generatePolicy("user", "Allow", event.methodArn);
       return callback(null, policy);
     }
 
-    logInfo("basicAuthorizer", "Auth failed");
-    const policy = generatePolicy("user", "Deny", event.methodArn);
-    return callback(null, policy);
+    if (!storedUserPassword) {
+      logError("basicAuthorizer", `User ${username} not found`);
+      const policy = generatePolicy("user", "Deny", event.methodArn);
+      return callback(null, policy);
+    }
+
+    if (storedUserPassword !== password) {
+      logError("basicAuthorizer", `Invalid password for user ${username}`);
+      const policy = generatePolicy("user", "Deny", event.methodArn);
+      return callback(null, policy);
+    }
+
+    logError(
+      "basicAuthorizer",
+      "Defaulting to unauthorized (Something weird happened)"
+    );
+    return callback("Unauthorized");
   } catch (error) {
     if (error instanceof Error) {
       logError("basicAuthorizer", error.message);
