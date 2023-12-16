@@ -51,6 +51,7 @@ export class ImportServiceStack extends cdk.Stack {
     const authorizer = new apiGateway.TokenAuthorizer(this, "TokenAuthoriser", {
       handler: basicAuthLambda,
       assumeRole: invokeTokenAuthoriserRole,
+      resultsCacheTtl: cdk.Duration.seconds(0),
     });
 
     const importApi = new apiGateway.RestApi(this, "import-api", {
@@ -62,26 +63,26 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
-    new apiGateway.CfnGatewayResponse(this, "APIGatewayResponseDefault4XX", {
-      restApiId: importApi.restApiId,
-      responseType: "DEFAULT_4XX",
-      responseParameters: {
-        "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
-        "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
-        "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
-      },
-      statusCode: "401",
-    });
-
-    new apiGateway.CfnGatewayResponse(this, "APIGatewayResponseDefault5XX", {
-      restApiId: importApi.restApiId,
-      responseType: "DEFAULT_5XX",
-      responseParameters: {
+    new apiGateway.GatewayResponse(this, "APIGatewayResponseAccessDenied", {
+      restApi: importApi,
+      type: apiGateway.ResponseType.ACCESS_DENIED,
+      responseHeaders: {
         "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
         "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
         "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
       },
       statusCode: "403",
+    });
+
+    new apiGateway.GatewayResponse(this, "APIGatewayResponseUnauthorized", {
+      restApi: importApi,
+      type: apiGateway.ResponseType.UNAUTHORIZED,
+      responseHeaders: {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
+      },
+      statusCode: "401",
     });
 
     const importProductsFileResource = importApi.root.addResource("import");
