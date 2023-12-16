@@ -9,6 +9,7 @@ import * as apiGateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as nodeLambda from "aws-cdk-lib/aws-lambda-nodejs";
 import { S3EventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 
 config();
 
@@ -63,6 +64,12 @@ export class ImportServiceStack extends cdk.Stack {
     bucket.grantWrite(importProductsFileHandler);
 
     // import file parser
+    const catalogBatchProcessQueue = sqs.Queue.fromQueueArn(
+      this,
+      "CatalogBatchProcessQueue",
+      process.env.CATALOG_BATCH_PROCESS_QUEUE_ARN as string
+    );
+
     const importFileParserLambda = new nodeLambda.NodejsFunction(
       this,
       "ImportFileParserLambda",
@@ -74,6 +81,7 @@ export class ImportServiceStack extends cdk.Stack {
         environment: {
           REGION: process.env.AWS_REGION as string,
           BUCKET_NAME: process.env.BUCKET_NAME as string,
+          SQS_URL: catalogBatchProcessQueue.queueUrl,
         },
       }
     );
@@ -88,5 +96,6 @@ export class ImportServiceStack extends cdk.Stack {
     bucket.grantRead(importFileParserLambda);
     bucket.grantWrite(importFileParserLambda);
     bucket.grantDelete(importFileParserLambda);
+    catalogBatchProcessQueue.grantSendMessages(importFileParserLambda);
   }
 }
