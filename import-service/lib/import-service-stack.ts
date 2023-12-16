@@ -4,6 +4,7 @@ import { config } from "dotenv";
 
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as apiGateway from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -23,6 +24,36 @@ export class ImportServiceStack extends cdk.Stack {
       process.env.BUCKET_NAME as string
     );
 
+    const basicAuthLambda = lambda.Function.fromFunctionArn(
+      this,
+      "BasicAuthorizer",
+      process.env.AUTH_LAMBDA_ARN as string
+    );
+
+    const invokeTokenAuthoriserRole = new iam.Role(this, "Role", {
+      roleName: "InvokeTokenAuthoriserRole",
+      assumedBy: new iam.ServicePrincipal("apigateway.amazonaws.com"),
+    });
+
+    const invokeTokenAuthoriserPolicyStatement = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      sid: "AllowInvokeLambda",
+      resources: [basicAuthLambda.functionArn],
+      actions: ["lambda:InvokeFunction"],
+    });
+
+    const policy = new iam.Policy(this, "Policy", {
+      policyName: "InvokeTokenAuthoriserPolicy",
+      roles: [invokeTokenAuthoriserRole],
+      statements: [invokeTokenAuthoriserPolicyStatement],
+    });
+
+    const authorizer = new apiGateway.TokenAuthorizer(this, "TokenAuthoriser", {
+      handler: basicAuthLambda,
+      assumeRole: invokeTokenAuthoriserRole,
+      resultsCacheTtl: cdk.Duration.seconds(0),
+    });
+
     const importApi = new apiGateway.RestApi(this, "import-api", {
       restApiName: "Import Service",
       defaultCorsPreflightOptions: {
@@ -30,6 +61,28 @@ export class ImportServiceStack extends cdk.Stack {
         allowOrigins: ["*"],
         allowMethods: apiGateway.Cors.ALL_METHODS,
       },
+    });
+
+    new apiGateway.GatewayResponse(this, "APIGatewayResponseAccessDenied", {
+      restApi: importApi,
+      type: apiGateway.ResponseType.ACCESS_DENIED,
+      responseHeaders: {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
+      },
+      statusCode: "403",
+    });
+
+    new apiGateway.GatewayResponse(this, "APIGatewayResponseUnauthorized", {
+      restApi: importApi,
+      type: apiGateway.ResponseType.UNAUTHORIZED,
+      responseHeaders: {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
+      },
+      statusCode: "401",
     });
 
     const importProductsFileResource = importApi.root.addResource("import");
@@ -58,6 +111,7 @@ export class ImportServiceStack extends cdk.Stack {
       requestParameters: {
         "method.request.querystring.name": true,
       },
+      authorizer,
     });
 
     bucket.grantRead(importProductsFileHandler);
