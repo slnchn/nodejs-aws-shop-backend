@@ -62,6 +62,28 @@ export class ImportServiceStack extends cdk.Stack {
       },
     });
 
+    new apiGateway.CfnGatewayResponse(this, "APIGatewayResponseDefault4XX", {
+      restApiId: importApi.restApiId,
+      responseType: "DEFAULT_4XX",
+      responseParameters: {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
+      },
+      statusCode: "401",
+    });
+
+    new apiGateway.CfnGatewayResponse(this, "APIGatewayResponseDefault5XX", {
+      restApiId: importApi.restApiId,
+      responseType: "DEFAULT_5XX",
+      responseParameters: {
+        "gatewayresponse.header.Access-Control-Allow-Origin": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Headers": "'*'",
+        "gatewayresponse.header.Access-Control-Allow-Methods": "'*'",
+      },
+      statusCode: "403",
+    });
+
     const importProductsFileResource = importApi.root.addResource("import");
 
     // import products file
