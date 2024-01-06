@@ -4,6 +4,7 @@ const axios = require('axios');
 
 const { parseBffUrl } = require('./utils');
 const { CART_SERVICE_NAME, PRODUCT_SERVICE_NAME } = require('./constants');
+const { productsCache } = require('./products-cache');
 
 config();
 
@@ -11,6 +12,38 @@ const recipientUrls = {
   [CART_SERVICE_NAME]: process.env.CART_SERVICE_URL,
   [PRODUCT_SERVICE_NAME]: process.env.PRODUCT_SERVICE_URL,
 };
+
+const TWO_MINUTES = 2 * 60 * 1000;
+
+fastify.get('/products', async (request, reply) => {
+  const now = Date.now();
+  console.log(now - productsCache.time);
+  if (now - productsCache.time < TWO_MINUTES && productsCache.data.length > 0) {
+    console.log('Returning products from cache');
+    return reply.send(productsCache.data);
+  }
+
+  console.log('Not cached or cache expired, fetching from service');
+
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: `${recipientUrls[PRODUCT_SERVICE_NAME]}/products`,
+    });
+
+    productsCache.time = now;
+    productsCache.data = response.data;
+
+    reply.send(response.data);
+  } catch (error) {
+    if (error.response) {
+      reply.status(error.response.status).send(error.response.data);
+    } else {
+      console.error(error);
+      reply.status(500).send({ error: 'Internal Server Error' });
+    }
+  }
+});
 
 fastify.route({
   method: ['GET', 'POST', 'PUT', 'DELETE'],
