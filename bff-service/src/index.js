@@ -56,7 +56,7 @@ fastify.route({
   },
 });
 
-fastify.listen({ port: 3000 }, (err, address) => {
+fastify.listen({ port: process.env.PORT || 3000 }, (err, address) => {
   if (err) {
     console.log(err);
     throw err;
