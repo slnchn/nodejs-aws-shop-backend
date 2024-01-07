@@ -1,5 +1,9 @@
-*.js
-*.d.ts
+node_modules/
+dist/
+
+.env
+
+!*.js
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

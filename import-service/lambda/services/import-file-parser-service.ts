@@ -100,6 +100,7 @@ export const sendSqsBatch = async (entries: any[]) => {
         description: entry.description,
         price: Number(entry.price),
         count: Number(entry.count),
+        image: entry.image,
       }),
     }));
 

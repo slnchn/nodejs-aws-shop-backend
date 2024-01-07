@@ -23,7 +23,7 @@ const PRODUCT_PRICE_MAX_DECIMAL_PLACES = 2;
 const PRODUCT_COUNT_MIN = 0;
 const PRODUCT_COUNT_MAX = 999999;
 
-const validFields = ["title", "description", "price", "count"];
+const validFields = ["title", "description", "image", "price", "count"];
 
 const validateTitle = (title: string): string[] => {
   const errors: string[] = [];
@@ -51,6 +51,21 @@ const validateDescription = (description: string): string[] => {
   });
 
   errors.push(...descriptionErrors);
+
+  return errors;
+};
+
+const validateImage = (image: string): string[] => {
+  const errors: string[] = [];
+
+  const imageErrors = validateString({
+    value: image,
+    valueName: "Image",
+    minLength: 0,
+    maxLength: 255,
+  });
+
+  errors.push(...imageErrors);
 
   return errors;
 };
@@ -123,6 +138,11 @@ export const validateCreateProduct = (
   if (product.description !== undefined) {
     const descriptionErrors = validateDescription(product.description);
     errors.push(...descriptionErrors);
+  }
+
+  if (product.image !== undefined) {
+    const imageErrors = validateImage(product.image);
+    errors.push(...imageErrors);
   }
 
   if (product.price === undefined) {
