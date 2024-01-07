@@ -31,11 +31,11 @@ export const validateString = ({
     errors.push(`${valueName} must be at most ${maxLength} characters long`);
   }
 
-  if (hasUnsafeCharacters(value)) {
-    errors.push(
-      `${valueName} must not contain unsafe ('<', '>', '&', '/', '\\', '?') characters`
-    );
-  }
+  // if (hasUnsafeCharacters(value)) {
+  //   errors.push(
+  //     `${valueName} must not contain unsafe ('<', '>', '&', '/', '\\', '?') characters`
+  //   );
+  // }
 
   return errors;
 };

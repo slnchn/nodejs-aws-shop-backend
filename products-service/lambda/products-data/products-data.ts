@@ -2,6 +2,7 @@ export interface Product {
   id: string;
   title: string;
   description?: string;
+  image?: string;
   price: number;
 }
 
@@ -17,6 +18,7 @@ export interface ProductStock extends Product {
 export interface CreateProductParams {
   title: string;
   description?: string;
+  image?: string;
   price: number;
   count: number;
 }

@@ -13,6 +13,7 @@ export const buildProductStock = (
   description: productStockData.description,
   price: productStockData.price,
   count: productStockData.count,
+  image: productStockData.image,
 });
 
 const sns = new SNSClient();
