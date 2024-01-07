@@ -63,14 +63,18 @@ fastify.route({
     }
 
     try {
+      const headers = request.headers.authorization
+        ? new axios.AxiosHeaders({
+            authorization: request.headers.authorization,
+          })
+        : undefined;
+
       const response = await axios({
         method: request.method,
         url: `${recipientUrl}${request.url}`,
         params: request.query,
         data: request.body,
-        headers: {
-          // Authorization: 'Basic c2xuY2huOjEyMzQ1Ng==',
-        },
+        headers,
       });
 
       // Forward the recipient service response to the client
